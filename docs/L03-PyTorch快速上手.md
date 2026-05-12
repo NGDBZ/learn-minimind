@@ -380,7 +380,7 @@ with autocast_ctx:
     res = model(input_ids, labels=labels)
     loss = res.loss + res.aux_loss
     loss = loss / args.accumulation_steps
-<img width="1202" height="674" alt="image" src="https://github.com/user-attachments/assets/dd9cd0ae-89b8-405f-ba9e-46a5b5f73c09" />
+![image](https://github.com/user-attachments/assets/dd9cd0ae-89b8-405f-ba9e-46a5b5f73c09)
 
 
 # 缩放反向传播
