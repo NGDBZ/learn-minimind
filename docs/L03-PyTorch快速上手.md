@@ -420,8 +420,8 @@ class TinyLM(nn.Module):
 
     def forward(self, x):
         h = self.embed(x)               # token_id → 向量
-        h = torch.relu(self.linear1(h))  # 非线性变换
-        logits = self.linear2(h)         # 向量 → 词表大小的分数
+        h = torch.relu(self.linear1(h))  # 非线性变换         self.linear1 & torch.relu: 一个隐藏层及激活函数。引入非线性，增加模型的表达能力。
+        logits = self.linear2(h)         # 向量 → 词表大小的分数       
         return logits
 
 # === 3. 训练 ===
