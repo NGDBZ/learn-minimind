@@ -382,16 +382,28 @@ with autocast_ctx:
     loss = loss / args.accumulation_steps
 
 # 缩放反向传播
-scaler.scale(loss).backward()
+scaler.scale(loss).backward()#scaler.scale(loss).backward() 中的 .scale() 是 PyTorch 中 AMP（自动混合精度） 模块里 torch.cuda.amp.GradScaler 类的核心方法，作用是对损失值进行放大（缩放），解决混合精度训练中低精度（FP16）梯度下溢的问题。
+先搞懂背景：为什么需要 scale？
+混合精度训练会把部分参数 / 计算从 FP32（单精度）降到 FP16（半精度），FP16 的数值范围远小于 FP32：
+FP32 能表示很小的小数（比如 1e-38），而 FP16 最小只能表示～6e-5；
+反向传播时，小梯度值会因为 FP16 的精度限制变成 0（梯度下溢），导致模型无法学习。
+
+
+
 
 # 梯度裁剪（防止梯度爆炸）
-scaler.unscale_(optimizer)
+scaler.unscale_(optimizer)#核心是先把被 GradScaler 放大的梯度 “还原”，
 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
 # 梯度累积
 scaler.step(optimizer)
 scaler.update()
 ```
+假设模型只有 3 个参数，梯度分别是 3,4,0 。
+<img width="393" height="83" alt="image" src="https://github.com/user-attachments/assets/b375197d-0ab5-419a-a204-953a0dbb8340" />
+
+
+
 
 ### 8. 实战：一个最简单的"下一个字符预测"
 
