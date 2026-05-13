@@ -428,34 +428,43 @@ class TinyLM(nn.Module):
         return logits
 
 # === 3. 训练 ===
-model = TinyLM(vocab_size)
+model = TinyLM(vocab_size)      vocab_size: 这是传递给构造函数的参数，告诉模型“我们的词表里总共有多少个不同的字符”。
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 loss_fn = nn.CrossEntropyLoss()
 
-for epoch in range(100):
-    inputs = data[:-1]     # "hello world ... learnin"
-    targets = data[1:]     # "ello world ... learning"
+for epoch in range(100):#训练的轮数
+    inputs = data[:-1]     # "hello world ... learnin"    输入是除最后一个字符外的所有序列。
+    targets = data[1:]     # "ello world ... learning"    目标是输入序列整体向后偏移一位。例如输入 'h'，目标就是 'e'。
 
     logits = model(inputs)
     loss = loss_fn(logits, targets)
 
     loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
+    optimizer.step()  根据梯度更新参数，让 Loss 变小。
+    optimizer.zero_grad()   非常重要。PyTorch 默认会累加梯度，每次更新后需手动清零，防止干扰下次计算。
 
     if (epoch + 1) % 20 == 0:
         print(f"Epoch {epoch+1}, Loss: {loss.item():.4f}")
 
 # === 4. 生成 ===
-with torch.no_grad():
+with torch.no_grad():关闭梯度计算，节省内存，因为预测时不需要反向传播。
     seed = char_to_id['h']
-    result = ['h']
-    current = torch.tensor([seed])
+动作：查找字符 'h' 对应的数字 ID。
+目的：模型不认识字符，它只认识数字。如果 'h' 在你的词表里排第 5，seed 就是 5。这就像是给模型一个“引子”或“种子”。
 
-    for _ in range(20):
-        logits = model(current)
-        probs = torch.softmax(logits, dim=-1)
-        next_id = torch.multinomial(probs, 1).item()
+    result = ['h']
+动作：初始化一个 Python 列表，预存入第一个字符。
+目的：这是你的“笔记本”。模型每预测出一个新字符，都会追加到这个列表里，最后合并成一句话。
+
+    current = torch.tensor([seed])
+动作：将数字 ID 包装成 PyTorch 的张量（Tensor）。
+目的：这是当前的输入。在后续的循环中，模型会接收这个 current，预测下一个字符；然后把预测到的新字符再变成新的 current 喂给模型，循环往复。
+
+
+    for _ in range(20):含义：让模型连续预测 20 个字符。_ 是一个占位符，表示我们只关心循环次数，不关心当前的索引值。
+        logits = model(current)将当前字符（current）喂给模型，得到输出。
+        probs = torch.softmax(logits, dim=-1)将乱糟糟的分数（Logits）转换成符合概率分布的数值。softmax 保证了所有预测字符的概率都在 0 到 1 之间，且它们的总和等于 1。
+        next_id = torch.multinomial(probs, 1).item()      torch.multinomial(probs, 1)：按概率随机抽1个并返回索引
         result.append(id_to_char[next_id])
         current = torch.tensor([next_id])
 
