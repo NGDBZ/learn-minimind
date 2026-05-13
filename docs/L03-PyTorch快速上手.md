@@ -380,7 +380,6 @@ with autocast_ctx:
     res = model(input_ids, labels=labels)
     loss = res.loss + res.aux_loss
     loss = loss / args.accumulation_steps
-![image](https://github.com/user-attachments/assets/dd9cd0ae-89b8-405f-ba9e-46a5b5f73c09)
 
 
 # 缩放反向传播
@@ -394,6 +393,8 @@ torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 scaler.step(optimizer)
 scaler.update()
 ```
+![image](https://github.com/user-attachments/assets/dd9cd0ae-89b8-405f-ba9e-46a5b5f73c09)
+
 
 ### 8. 实战：一个最简单的"下一个字符预测"
 
